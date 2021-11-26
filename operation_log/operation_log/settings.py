@@ -90,12 +90,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME', 'cmp_iaas'),
-        #'USER': os.getenv('DB_USER', 'cmp_iaas'),
-        #'PASSWORD': os.getenv('DB_PASSWORD', 'cmp_iaas'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'r00tme'),
+        'USER': os.getenv('DB_USER', 'cmp_iaas'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', '127.0.0.1'),
-        #'HOST': os.getenv('DB_HOST', '10.209.0.161'),
         'PORT': int(os.getenv('DB_PORT', 5432)),
         'CONN_MAX_AGE': 3
     }
