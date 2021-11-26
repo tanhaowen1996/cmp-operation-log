@@ -1,8 +1,8 @@
 import logging
 import json
 from django.core.management.base import BaseCommand
-from operation_log.operation_log.utils import PikaMixin
-from operation_log.operation_log.serializers import OperationLogSerializer
+from operation_log.utils import PikaMixin
+from operation_log.serializers import OperationLogSerializer
 import re
 
 
