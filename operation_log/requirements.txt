@@ -5,4 +5,9 @@ djangorestframework
 drf_yasg
 gunicorn
 httptools
+psycopg2
 pika
+python-dotenv
+requests
+uvicorn
+uvloop
