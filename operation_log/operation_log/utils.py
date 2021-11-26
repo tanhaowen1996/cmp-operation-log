@@ -1,16 +1,16 @@
 import pika
-from .settings import user, password, host, port, virtual_host
+from .settings import MQ_USER, MQ_PASSWORD, MQ_HOST, MQ_PORT, MQ_VIRTUAL
 
 
 class PikaMixin:
 
     @staticmethod
     def get_conn():
-        credentials = pika.PlainCredentials(user, password)
+        credentials = pika.PlainCredentials(MQ_USER, MQ_PASSWORD)
         connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host=host,
-            port=port,
-            virtual_host=virtual_host,
+            host=MQ_HOST,
+            port=MQ_PORT,
+            virtual_host=MQ_VIRTUAL,
             credentials=credentials))
         channel = connection.channel()
         return channel
