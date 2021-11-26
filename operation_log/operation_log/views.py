@@ -22,13 +22,11 @@ class OperationLogViewSet(mixins.ListModelMixin,
     serializer_class = OperationLogSerializer
     queryset = OperationLog.objects.all()
 
-    @action(detail=False, methods=['get'])
-    def log_list(self):
-        import pdb
-        pdb.set_trace()
+    @action(detail=False, methods=['post'])
+    def log_list(self, request, *args, **kwargs):
         qs = super().get_queryset()
         if not self.request.user.is_staff:
-            qs = qs.filter(type_id=self.request.account_info['id'])
+            qs = qs.filter(type_id=request.data['type_id'], type=request.data['type'])
         queryset = self.filter_queryset(qs)
 
         page = self.paginate_queryset(queryset)
