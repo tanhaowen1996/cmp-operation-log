@@ -2,10 +2,8 @@ import logging
 import json
 from django.core.management.base import BaseCommand
 from operation_log.utils import PikaMixin
-from operation_log.models import OperationLog
 from operation_log.serializers import OperationLogSerializer
 import re
-import uuid
 
 
 LOG_FORMAT = "%(asctime)s %(levelname)s %(module)s.%(funcName)s %(message)s"
@@ -45,7 +43,7 @@ class Command(BaseCommand):
         # pdb.set_trace()
         if method == 'DELETE':
             return '删除云硬盘'
-        if method == "PUT":
+        if method == "PUT" or method == 'PATCH':
             return '修改云硬盘'
         type_id = re.findall(r'/v2/volume/([0-9a-f-]{36})', url)
         if type_id == []:
@@ -72,7 +70,8 @@ class Command(BaseCommand):
                 'getConsole' in body_json['requestUrl'] or \
                 'attached_list' in body_json['requestUrl'] or \
                 'detached_list' in body_json['requestUrl'] or \
-                'ums' in body_json['requestUrl']:
+                'ums' in body_json['requestUrl'] or \
+                'listInstance' in body_json['requestUrl']:
             return None
 
         print(body_json['requestUrl'])
@@ -121,13 +120,9 @@ class Command(BaseCommand):
             type = 'server'
             type_name = self.get_server_operation(body_json['requestUrl'], body_json['method'])
             get_type_id = re.findall(r'/v2/servers/([0-9a-f-]{36})', body_json['requestUrl'])
-
             if get_type_id == []:
-                import pdb
-                pdb.set_trace()
-                response_json = json.loads(body_json['responseBody'])
-                request_json = json.loads(body_json['requestBody'])
                 if type_name == '创建云主机':
+                    response_json = json.loads(body_json['responseBody'])
                     servers_data = response_json['data']
                     for server_data in servers_data:
                         type_id = server_data['id']
@@ -147,6 +142,7 @@ class Command(BaseCommand):
                     return None
 
                 if type_name == '删除云主机':
+                    request_json = json.loads(body_json['requestBody'])
                     type_id = body_json['requestUrl'].split('/')[-1]
                     type_id = type_id.split('?')[1].split('=')[1].split('&')[0]
                     serializer = OperationLogSerializer(data=request_json)
@@ -165,6 +161,7 @@ class Command(BaseCommand):
                     return None
 
                 if type_name == '重新命名' or type_name == '云主机添加网卡':
+                    request_json = json.loads(body_json['requestBody'])
                     type_id = request_json['serverId']
                     serializer = OperationLogSerializer(data=request_json)
                     serializer.is_valid(raise_exception=True)
@@ -182,10 +179,12 @@ class Command(BaseCommand):
                     return None
 
                 if type_name == '关闭云主机' or type_name == '开启云主机':
+                    request_json = json.loads(body_json['requestBody'])
+                    response_json = json.loads(body_json['responseBody'])
                     servers_id = request_json['serverIds']
                     for server_id in servers_id:
                         type_id = server_id
-                        serializer = OperationLogSerializer(data=servers_id)
+                        serializer = OperationLogSerializer(data=server_id)
                         serializer.is_valid(raise_exception=True)
                         serializer.save(
                             name=type_name,
@@ -200,11 +199,13 @@ class Command(BaseCommand):
                         )
                     return None
 
-                if type_name == '云主机卸载网卡':
+                if type_name == '云主机挂载云硬盘':
+                    request_json = json.loads(body_json['requestBody'])
+                    # response_json = json.loads(body_json['responseBody'])
                     servers = request_json
                     for server in servers:
-                        type_id = server['serverId']
-                        serializer = OperationLogSerializer(data=servers)
+                        type_id = server['server_id']
+                        serializer = OperationLogSerializer(data=server)
                         serializer.is_valid(raise_exception=True)
                         serializer.save(
                             name=type_name,
@@ -213,7 +214,28 @@ class Command(BaseCommand):
                             type=type,
                             type_id=type_id,
                             type_name=type_name,
-                            status=response_json['descr'],
+                            status="操作成功",
+                            operation_ip=body_json['ip'],
+                            operation_address=body_json['requestUrl'],
+                        )
+                    return None
+
+                if type_name == '云主机卸载网卡' or type_name == '云主机卸载云硬盘':
+                    request_json = json.loads(body_json['requestBody'])
+                    #response_json = json.loads(body_json['responseBody'])
+                    servers = request_json
+                    for server in servers:
+                        type_id = server['serverId']
+                        serializer = OperationLogSerializer(data=server)
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save(
+                            name=type_name,
+                            user_id=body_json['accountInfo']['id'],
+                            user_name=body_json['accountInfo']['loginName'],
+                            type=type,
+                            type_id=type_id,
+                            type_name=type_name,
+                            status="操作成功",
                             operation_ip=body_json['ip'],
                             operation_address=body_json['requestUrl'],
                         )
