@@ -16,6 +16,13 @@ class OperationLogViewSet(mixins.ListModelMixin,
     retrieve:
     Get alarm group detail with id
 
+    log_list:
+    获取操作日志接口
+    需要传入参数如下：
+    type {server or volume}
+    type_id {server_id or volume_id}
+    type和type_id要是同一资源
+
     """
     #authentication_classes = (OSAuthentication,)
     filterset_class = OperationLogFilter
