@@ -11,7 +11,7 @@ python-build:
   stage: build
   script:
   - source /data/deploy/ci.sh
-  - cd djapp
+  - cd operation_log
   - docker_build_py_v1
   only:
   - master
