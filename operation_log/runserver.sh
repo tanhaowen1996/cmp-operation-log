@@ -12,6 +12,8 @@ if [ "asgi" = "$SERVICE_MODE" ]; then
     gunicorn djapp.asgi -b :$WEB_PORT -k uvicorn.workers.UvicornWorker -w $WEB_CONCURRENCY --max-requests $MAX_REQUESTS
 elif [ "django" = "$SERVICE_MODE" ]; then
     ./manage.py runserver 0:$WEB_PORT
+elif [ "operation_log" = "$SERVICE_MODE" ]; then
+    ./manage.py notification_server
 else
     echo "unknown mode: $SERVICE_MODE"
 fi
