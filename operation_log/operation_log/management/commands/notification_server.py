@@ -74,18 +74,32 @@ class Command(BaseCommand):
                 'listInstance' in body_json['requestUrl']:
             return None
 
-        print(body_json['requestUrl'])
-        print("###############################################")
-
         if 'volume' in body_json['requestUrl']:
             type = 'volume'
             type_name = self.get_volume_operation(body_json['requestUrl'], body_json['method'])
             get_type_id = re.findall(r'/v2/volume/([0-9a-f-]{36})', body_json['requestUrl'])
-            if get_type_id == []:
-                response_json = json.loads(body_json['responseBody'])
-                for instance in response_json:
-                    type_id = instance['id']
-                    serializer = OperationLogSerializer(data=instance)
+            try:
+                if get_type_id == []:
+                    response_json = json.loads(body_json['responseBody'])
+                    for instance in response_json:
+                        type_id = instance['id']
+                        serializer = OperationLogSerializer(data=instance)
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save(
+                            name=type_name,
+                            user_id=body_json['accountInfo']['id'],
+                            user_name=body_json['accountInfo']['loginName'],
+                            type=type,
+                            type_id=type_id,
+                            type_name=type_name,
+                            status='操作成功',
+                            operation_ip=body_json['ip'],
+                            operation_address=body_json['requestUrl'],
+                        )
+                    return None
+                else:
+                    type_id = get_type_id[0]
+                    serializer = OperationLogSerializer(data=body_json)
                     serializer.is_valid(raise_exception=True)
                     serializer.save(
                         name=type_name,
@@ -98,35 +112,43 @@ class Command(BaseCommand):
                         operation_ip=body_json['ip'],
                         operation_address=body_json['requestUrl'],
                     )
-                return None
-            else:
-                type_id = get_type_id[0]
-                serializer = OperationLogSerializer(data=body_json)
-                serializer.is_valid(raise_exception=True)
-                serializer.save(
-                    name=type_name,
-                    user_id=body_json['accountInfo']['id'],
-                    user_name=body_json['accountInfo']['loginName'],
-                    type=type,
-                    type_id=type_id,
-                    type_name=type_name,
-                    status='操作成功',
-                    operation_ip=body_json['ip'],
-                    operation_address=body_json['requestUrl'],
-                )
-                return None
+                    return None
+            except BaseException:
+                return BaseException
 
         if 'servers' in body_json['requestUrl']:
             type = 'server'
             type_name = self.get_server_operation(body_json['requestUrl'], body_json['method'])
-            get_type_id = re.findall(r'/v2/servers/([0-9a-f-]{36})', body_json['requestUrl'])
-            if get_type_id == []:
-                if type_name == '创建云主机':
-                    response_json = json.loads(body_json['responseBody'])
-                    servers_data = response_json['data']
-                    for server_data in servers_data:
-                        type_id = server_data['id']
-                        serializer = OperationLogSerializer(data=server_data)
+            get_type_id = re.findall(r'/v1/compute/servers/([0-9a-f-]{36})', body_json['requestUrl'])
+            response_json = json.loads(body_json['responseBody'])
+            status = "操作失败"
+            if 'descr' in response_json.keys() and response_json['descr'] == "操作成功":
+                status = "操作成功"
+            try:
+                if get_type_id == []:
+                    if type_name == '创建云主机':
+                        servers_data = response_json['data']
+                        for server_data in servers_data:
+                            type_id = server_data['id']
+                            serializer = OperationLogSerializer(data=server_data)
+                            serializer.is_valid(raise_exception=True)
+                            serializer.save(
+                                name=type_name,
+                                user_id=body_json['accountInfo']['id'],
+                                user_name=body_json['accountInfo']['loginName'],
+                                type=type,
+                                type_id=type_id,
+                                type_name=type_name,
+                                status=status,
+                                operation_ip=body_json['ip'],
+                                operation_address=body_json['requestUrl'],
+                            )
+                        return None
+
+                    if type_name == '删除云主机':
+                        type_id = body_json['requestUrl'].split('/')[-1]
+                        type_id = type_id.split('?')[1].split('=')[1].split('&')[0]
+                        serializer = OperationLogSerializer(data=body_json)
                         serializer.is_valid(raise_exception=True)
                         serializer.save(
                             name=type_name,
@@ -135,17 +157,93 @@ class Command(BaseCommand):
                             type=type,
                             type_id=type_id,
                             type_name=type_name,
-                            status=response_json['descr'],
+                            status=status,
                             operation_ip=body_json['ip'],
                             operation_address=body_json['requestUrl'],
                         )
-                    return None
+                        return None
 
-                if type_name == '删除云主机':
-                    request_json = json.loads(body_json['requestBody'])
-                    type_id = body_json['requestUrl'].split('/')[-1]
-                    type_id = type_id.split('?')[1].split('=')[1].split('&')[0]
-                    serializer = OperationLogSerializer(data=request_json)
+                    if type_name == '重新命名' or type_name == '云主机添加网卡':
+                        request_json = json.loads(body_json['requestBody'])
+                        type_id = request_json['serverId']
+                        serializer = OperationLogSerializer(data=request_json)
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save(
+                            name=type_name,
+                            user_id=body_json['accountInfo']['id'],
+                            user_name=body_json['accountInfo']['loginName'],
+                            type=type,
+                            type_id=type_id,
+                            type_name=type_name,
+                            status=status,
+                            operation_ip=body_json['ip'],
+                            operation_address=body_json['requestUrl'],
+                        )
+                        return None
+
+                    if type_name == '关闭云主机' or type_name == '开启云主机':
+                        request_json = json.loads(body_json['requestBody'])
+                        servers_id = request_json['serverIds']
+                        for server_id in servers_id:
+                            type_id = server_id
+                            serializer = OperationLogSerializer(data=server_id)
+                            serializer.is_valid(raise_exception=True)
+                            serializer.save(
+                                name=type_name,
+                                user_id=body_json['accountInfo']['id'],
+                                user_name=body_json['accountInfo']['loginName'],
+                                type=type,
+                                type_id=type_id,
+                                type_name=type_name,
+                                status=status,
+                                operation_ip=body_json['ip'],
+                                operation_address=body_json['requestUrl'],
+                            )
+                        return None
+
+                    if type_name == '云主机挂载云硬盘':
+                        request_json = json.loads(body_json['requestBody'])
+                        servers = request_json
+                        for server in servers:
+                            type_id = server['server_id']
+                            serializer = OperationLogSerializer(data=server)
+                            serializer.is_valid(raise_exception=True)
+                            serializer.save(
+                                name=type_name,
+                                user_id=body_json['accountInfo']['id'],
+                                user_name=body_json['accountInfo']['loginName'],
+                                type=type,
+                                type_id=type_id,
+                                type_name=type_name,
+                                status=status,
+                                operation_ip=body_json['ip'],
+                                operation_address=body_json['requestUrl'],
+                            )
+                        return None
+
+                    if type_name == '云主机卸载网卡' or type_name == '云主机卸载云硬盘':
+                        request_json = json.loads(body_json['requestBody'])
+                        servers = request_json
+                        for server in servers:
+                            type_id = server['serverId']
+                            serializer = OperationLogSerializer(data=server)
+                            serializer.is_valid(raise_exception=True)
+                            serializer.save(
+                                name=type_name,
+                                user_id=body_json['accountInfo']['id'],
+                                user_name=body_json['accountInfo']['loginName'],
+                                type=type,
+                                type_id=type_id,
+                                type_name=type_name,
+                                status=status,
+                                operation_ip=body_json['ip'],
+                                operation_address=body_json['requestUrl'],
+                            )
+                        return None
+
+                else:
+                    type_id = get_type_id[0]
+                    serializer = OperationLogSerializer(data=body_json)
                     serializer.is_valid(raise_exception=True)
                     serializer.save(
                         name=type_name,
@@ -154,109 +252,13 @@ class Command(BaseCommand):
                         type=type,
                         type_id=type_id,
                         type_name=type_name,
-                        status='操作成功',
+                        status=status,
                         operation_ip=body_json['ip'],
                         operation_address=body_json['requestUrl'],
                     )
                     return None
-
-                if type_name == '重新命名' or type_name == '云主机添加网卡':
-                    request_json = json.loads(body_json['requestBody'])
-                    type_id = request_json['serverId']
-                    serializer = OperationLogSerializer(data=request_json)
-                    serializer.is_valid(raise_exception=True)
-                    serializer.save(
-                        name=type_name,
-                        user_id=body_json['accountInfo']['id'],
-                        user_name=body_json['accountInfo']['loginName'],
-                        type=type,
-                        type_id=type_id,
-                        type_name=type_name,
-                        status='操作成功',
-                        operation_ip=body_json['ip'],
-                        operation_address=body_json['requestUrl'],
-                    )
-                    return None
-
-                if type_name == '关闭云主机' or type_name == '开启云主机':
-                    request_json = json.loads(body_json['requestBody'])
-                    response_json = json.loads(body_json['responseBody'])
-                    servers_id = request_json['serverIds']
-                    for server_id in servers_id:
-                        type_id = server_id
-                        serializer = OperationLogSerializer(data=server_id)
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save(
-                            name=type_name,
-                            user_id=body_json['accountInfo']['id'],
-                            user_name=body_json['accountInfo']['loginName'],
-                            type=type,
-                            type_id=type_id,
-                            type_name=type_name,
-                            status=response_json['descr'],
-                            operation_ip=body_json['ip'],
-                            operation_address=body_json['requestUrl'],
-                        )
-                    return None
-
-                if type_name == '云主机挂载云硬盘':
-                    request_json = json.loads(body_json['requestBody'])
-                    # response_json = json.loads(body_json['responseBody'])
-                    servers = request_json
-                    for server in servers:
-                        type_id = server['server_id']
-                        serializer = OperationLogSerializer(data=server)
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save(
-                            name=type_name,
-                            user_id=body_json['accountInfo']['id'],
-                            user_name=body_json['accountInfo']['loginName'],
-                            type=type,
-                            type_id=type_id,
-                            type_name=type_name,
-                            status="操作成功",
-                            operation_ip=body_json['ip'],
-                            operation_address=body_json['requestUrl'],
-                        )
-                    return None
-
-                if type_name == '云主机卸载网卡' or type_name == '云主机卸载云硬盘':
-                    request_json = json.loads(body_json['requestBody'])
-                    #response_json = json.loads(body_json['responseBody'])
-                    servers = request_json
-                    for server in servers:
-                        type_id = server['serverId']
-                        serializer = OperationLogSerializer(data=server)
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save(
-                            name=type_name,
-                            user_id=body_json['accountInfo']['id'],
-                            user_name=body_json['accountInfo']['loginName'],
-                            type=type,
-                            type_id=type_id,
-                            type_name=type_name,
-                            status="操作成功",
-                            operation_ip=body_json['ip'],
-                            operation_address=body_json['requestUrl'],
-                        )
-                    return None
-
-            else:
-                type_id = get_type_id[0]
-                serializer = OperationLogSerializer(data=body_json)
-                serializer.is_valid(raise_exception=True)
-                serializer.save(
-                    name=type_name,
-                    user_id=body_json['accountInfo']['id'],
-                    user_name=body_json['accountInfo']['loginName'],
-                    type=type,
-                    type_id=type_id,
-                    type_name=type_name,
-                    status='操作成功',
-                    operation_ip=body_json['ip'],
-                    operation_address=body_json['requestUrl'],
-                )
-                return None
+            except BaseException:
+                return BaseException
 
 
     def get_operation(self):
