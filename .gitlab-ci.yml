@@ -37,3 +37,12 @@ deploy-dev:
   - master
   - dev
   #when: manual
+  
+deploy-prod:
+  stage: package
+  script:
+  - source /data/deploy/ci.sh
+  - deploy_prod
+  only:
+  - master
+  when: manual
