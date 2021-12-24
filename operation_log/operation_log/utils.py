@@ -1,17 +1,16 @@
 import pika
-from .settings import MQ_USER, MQ_PASSWORD, MQ_HOST, MQ_PORT, MQ_VIRTUAL
+from .settings import MQ_URL
 
 
 class PikaMixin:
 
     @staticmethod
     def get_conn():
-        credentials = pika.PlainCredentials(MQ_USER, MQ_PASSWORD)
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host=MQ_HOST,
-            port=MQ_PORT,
-            virtual_host=MQ_VIRTUAL,
-            credentials=credentials))
+        node_list = MQ_URL.split('&')
+        all_endpoints = []
+        for node in node_list:
+            all_endpoints.append(pika.URLParameters(node))
+        connection = pika.BlockingConnection(all_endpoints)
         channel = connection.channel()
         return channel
 
