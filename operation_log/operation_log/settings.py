@@ -145,7 +145,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # RabbitMQ
-MQ_URL = os.getenv("amqp://user:passwd@host1:port&amqp://user:passwd@host2:port")
+MQ_URL = os.getenv("MQ_URL", "amqp://user:passwd@host1:port&amqp://user:passwd@host2:port")
 
 
 SWAGGER = bool(int(os.getenv('SWAGGER', 1)))
