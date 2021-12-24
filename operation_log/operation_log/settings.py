@@ -145,12 +145,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # RabbitMQ
-
-MQ_USER = os.getenv('MQ_USER', 'cmp_iaas')
-MQ_PASSWORD = os.getenv('MQ_PASSWORD', 'cmp_iaas')
-MQ_HOST = os.getenv('MQ_HOST', '127.0.0.1')
-MQ_PORT = os.getenv('MQ_PORT', '5672')
-MQ_VIRTUAL = os.getenv('MQ_VIRTUAL', '/')
+MQ_URL = os.getenv("amqp://user:passwd@host1:port&amqp://user:passwd@host2:port")
 
 
 SWAGGER = bool(int(os.getenv('SWAGGER', 1)))
