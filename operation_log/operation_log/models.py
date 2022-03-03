@@ -1,13 +1,8 @@
-from django.conf import settings
-from django.contrib.auth.models import Group
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.indexes import BrinIndex
-import requests
-import json
 import uuid
-from .utils import PikaMixin
-import pika
 
 
 class OperationLog(models.Model):
@@ -57,3 +52,4 @@ class OperationLog(models.Model):
 
     class Meta:
         indexes = (BrinIndex(fields=['created_at']),)
+        ordering = ('-created_at',)
