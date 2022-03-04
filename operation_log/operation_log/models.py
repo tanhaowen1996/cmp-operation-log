@@ -52,4 +52,3 @@ class OperationLog(models.Model):
 
     class Meta:
         indexes = (BrinIndex(fields=['created_at']),)
-        ordering = ('-created_at',)
