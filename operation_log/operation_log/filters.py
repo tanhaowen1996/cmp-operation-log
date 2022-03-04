@@ -1,10 +1,9 @@
 from django_filters import (
     FilterSet,
     CharFilter,
-    DateFilter,
-    OrderingFilter,
-    DateTimeFilter)
+    DateFilter,)
 from .models import OperationLog
+
 
 class OperationLogFilter(FilterSet):
     name = CharFilter(field_name='name', lookup_expr='icontains')
@@ -13,7 +12,7 @@ class OperationLogFilter(FilterSet):
     server_id = CharFilter(field_name='server_id', lookup_expr='icontains')
     volume_id = CharFilter(field_name='volume_id', lookup_expr='icontains')
     volume_name = CharFilter(field_name='volume_name', lookup_expr='icontains')
-    created_at = CharFilter(field_name='created_at', lookup_expr='icontains')
+    created_at = DateFilter(field_name='created_at__date', lookup_expr='contains')
 
     class Meta:
         mode = OperationLog
