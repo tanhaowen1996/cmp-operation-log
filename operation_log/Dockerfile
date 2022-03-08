@@ -23,7 +23,7 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install -U -i https://mirrors.aliyun.com/pypi/simple/ pip
 RUN pip3 install -U -i https://mirrors.aliyun.com/pypi/simple/ -r /tmp/requirements.txt \
     && rm -rf /tmp/requirements.txt \
-    useradd -U app_user \
+    && useradd -U app_user \
     && install -d -m 0755 -o app_user -g app_user /app/static
 
 
