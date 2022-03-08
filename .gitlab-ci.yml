@@ -32,8 +32,8 @@ deploy-dev:
   stage: package
   script:
   - source /data/deploy/ci.sh
-  - deploy_dev_many operation-log
-  - deploy_dev_many operation-log-notification
+  - deploy_dev_many cmp-operation-log
+  - deploy_dev_many cmp-operation-log-notification
   only:
   - master
   - dev
