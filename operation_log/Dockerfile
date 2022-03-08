@@ -18,7 +18,7 @@ RUN apt install -y \
         libglib2.0-0 \
         libpq-dev \
         net-tools \
-        vim \
+        vim
 COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install -U -i https://mirrors.aliyun.com/pypi/simple/ pip
 RUN pip3 install -U -i https://mirrors.aliyun.com/pypi/simple/ -r /tmp/requirements.txt \
