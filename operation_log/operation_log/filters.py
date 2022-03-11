@@ -8,6 +8,7 @@ from .models import OperationLog
 
 class OperationLogFilter(FilterSet):
     name = CharFilter(field_name='name', lookup_expr='icontains')
+    type_name = CharFilter(field_name='type_name', lookup_expr='icontains')
     user_name = CharFilter(field_name='user_name', lookup_expr='icontains')
     server_name = CharFilter(field_name='server_name', lookup_expr='icontains')
     server_id = CharFilter(field_name='server_id', lookup_expr='icontains')
@@ -25,4 +26,4 @@ class OperationLogFilter(FilterSet):
 
     class Meta:
         mode = OperationLog
-        filter = ('name', 'user_name', 'server_name', 'server_id', 'volume_id', 'volume_name', 'created_at')
+        filter = ('name', 'type_name', 'user_name', 'server_name', 'server_id', 'volume_id', 'volume_name', 'created_at')
