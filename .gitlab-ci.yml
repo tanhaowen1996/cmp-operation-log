@@ -43,7 +43,8 @@ deploy-prod:
   stage: package
   script:
   - source /data/deploy/ci.sh
-  - deploy_prod
+  - deploy_prod_many cmp-operation-log
+  - deploy_dev_many cmp-operation-log-notification
   only:
   - master
   when: manual
