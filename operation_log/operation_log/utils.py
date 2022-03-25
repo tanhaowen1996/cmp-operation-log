@@ -1,3 +1,6 @@
+import logging
+import random
+
 import pika
 from .settings import MQ_URL
 
@@ -10,7 +13,15 @@ class PikaMixin:
         all_endpoints = []
         for node in node_list:
             all_endpoints.append(pika.URLParameters(node))
-        connection = pika.BlockingConnection(all_endpoints)
+        random.shuffle(all_endpoints)
+        for url in all_endpoints:
+            try:
+                logging.basicConfig(level=logging.DEBUG)
+                connection = pika.BlockingConnection(url)
+            except Exception as ex:
+                print(str(ex))
+            else:
+                break
         channel = connection.channel()
         return channel
 
